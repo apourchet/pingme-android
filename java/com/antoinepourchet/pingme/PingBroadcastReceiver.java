@@ -35,7 +35,7 @@ public class PingBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         for (Pingable p : this.pingables) {
             String s = intent.getStringExtra(ListenService.MESSAGE_PING);
-            p.onPing(new Ping("12345", "DEFAULT_MSG"));
+            p.onPing(Ping.unmarshal(s));
         }
     }
 }

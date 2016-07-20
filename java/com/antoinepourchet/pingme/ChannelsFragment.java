@@ -3,14 +3,14 @@ package com.antoinepourchet.pingme;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.Random;
 
-public class ChannelsFragment extends TabbedFragment implements View.OnClickListener {
+public class ChannelsFragment extends TabbedFragment implements View.OnClickListener, AddChannelDialog.Listener {
 
     public static final String TAG = "ChannelsFragment";
 
@@ -37,7 +37,7 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart");
-        fab.hide();
+        fab.show();
     }
 
     @Override
@@ -53,10 +53,10 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
     }
 
     public void processFabClick() {
-        String channelId = new Random().nextInt(10000) + "";
-        ListenService.getInstance().startListen(channelId);
-        PersistentDataManager.addChannel(getContext(), channelId);
-        channelsListView.refreshListAdapter();
+        AddChannelDialog dialog = new AddChannelDialog();
+        dialog.setListener(this);
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        dialog.show(fragmentManager, "AddChannelDialog");
     }
 
     @Override
@@ -65,5 +65,13 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
             case R.id.fab:
                 processFabClick();
         }
+    }
+
+    @Override
+    public void onPositiveClick(String host, String channelId) {
+        Log.d(TAG, "onPositiveClick");
+        ListenService.getInstance().startListen(host, channelId);
+        PersistentDataManager.addChannel(getContext(), channelId);
+        channelsListView.refreshListAdapter();
     }
 }

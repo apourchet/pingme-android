@@ -2,7 +2,6 @@ package com.antoinepourchet.pingme;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 
-public class ListenService extends Service {
+public class ListenService extends Service implements Pingable {
 
     public static final String TAG = "ListenService";
     public static final String BROADCAST_PING = "broadcast_intent";
@@ -32,22 +31,17 @@ public class ListenService extends Service {
         return instance;
     }
 
-    public synchronized void onChannelProgress(String channelId, String lastLine) {
-        try {
-            String line = ChannelUtil.parseLine(lastLine);
-            Ping ping = new Ping(channelId, line);
-            lastPings.put(channelId, ping);
-            notifier.onPing(ping);
-            broadcastPing(ping);
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
+    @Override
+    public void onPing(Ping ping) {
+        PersistentDataManager.addLastPing(this, ping);
+        lastPings.put(ping.getChannelId(), ping);
+        notifier.onPing(ping);
+        broadcastPing(ping);
     }
 
     public void broadcastPing(Ping ping) {
         Intent intent = new Intent(BROADCAST_PING);
-        intent.putExtra(MESSAGE_PING, "TEST");
-        Log.d(TAG, "BROADCASTED");
+        intent.putExtra(MESSAGE_PING, Ping.marshal(ping));
         broadcaster.sendBroadcast(intent);
     }
 
@@ -59,16 +53,15 @@ public class ListenService extends Service {
         return new ArrayList<>(lastPings.values());
     }
 
-    public synchronized void startListen(String channelId) {
-        String host = PersistentDataManager.getHost(this);
+    public synchronized void startListen(String host, String channelId) {
         ChannelListener cl = new ChannelListener(this, host, channelId);
-        cl.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        cl.start();
         channels.put(channelId, cl);
     }
 
     public synchronized void stopListen(String channelId) {
         if (channels.containsKey(channelId)){
-            channels.get(channelId).cancel(true);
+            channels.get(channelId).stop();
             channels.remove(channelId);
         }
     }
@@ -95,9 +88,7 @@ public class ListenService extends Service {
         String host = PersistentDataManager.getHost(this);
 
         for (String c : allChannels) {
-            ChannelListener cl = new ChannelListener(this, host, c);
-            cl.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            channels.put(c, cl);
+            startListen(host, c);
         }
     }
 

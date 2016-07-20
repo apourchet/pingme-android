@@ -1,6 +1,5 @@
 package com.antoinepourchet.pingme;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -12,20 +11,27 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
-public class ChannelListener extends AsyncTask<String, String, Object> {
+public class ChannelListener implements Runnable {
 
     public static final String TAG = "ChannelListener";
 
     private String host;
     private String channelId;
-    private ListenService service;
     private URL url;
-    private boolean listening = false;
 
-    public ChannelListener(ListenService service, String host, String channelId) {
+    private Pingable pingable;
+
+    private boolean listening;
+    private boolean requestedStop;
+    private Thread thread;
+
+    public ChannelListener(Pingable pingable, String host, String channelId) {
         this.host = host;
         this.channelId = channelId;
-        this.service = service;
+        this.pingable = pingable;
+        this.requestedStop = false;
+        this.listening = false;
+        this.thread = new Thread(this);
     }
 
     public boolean isListening() {
@@ -48,13 +54,23 @@ public class ChannelListener extends AsyncTask<String, String, Object> {
     private void readConnection(BufferedReader in) throws IOException {
         listening = true;
         String inputLine;
-        while ((inputLine = in.readLine()) != null) {
+        while ((inputLine = in.readLine()) != null && !requestedStop) {
             if (inputLine.length() == 0) {
                 continue;
             }
-            service.onChannelProgress(this.channelId, inputLine);
+            onLineRead(inputLine);
         }
         in.close();
+    }
+
+    private void onLineRead(String inputLine) {
+        try {
+            String line = ChannelUtil.parseLine(inputLine);
+            Ping ping = new Ping(host, channelId, line);
+            pingable.onPing(ping);
+        } catch (Exception e) {
+            Log.e(TAG, "MALFORMED MESSAGE: " + inputLine);
+        }
     }
 
     private void waitForRetry() {
@@ -73,10 +89,19 @@ public class ChannelListener extends AsyncTask<String, String, Object> {
         return in;
     }
 
+    public void start() {
+        thread.start();
+    }
+
+    public void stop() {
+        this.requestedStop = true;
+    }
+
     @Override
-    protected Object doInBackground(String... params) {
+    public void run() {
         if (!isWellFormed()) {
-            return null;
+            Log.e(TAG, "MALFORMED URL: '" + this.host + "'");
+            return;
         }
         Log.d(TAG, "Listening: " + this.host + " -> " + this.channelId);
 
