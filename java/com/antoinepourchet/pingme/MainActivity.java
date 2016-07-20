@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -96,6 +97,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public TabbedFragment getItem(int position) {
             return tabbedFragments.get(position);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            tabbedFragments.get(position).onFocus();
+            return super.instantiateItem(container, position);
         }
 
         @Override
