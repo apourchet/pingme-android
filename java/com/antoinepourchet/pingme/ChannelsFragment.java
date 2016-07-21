@@ -10,7 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 
-public class ChannelsFragment extends TabbedFragment implements View.OnClickListener, AddChannelDialog.Listener {
+public class ChannelsFragment extends TabbedFragment
+        implements View.OnClickListener, AddChannelDialog.Listener {
 
     public static final String TAG = "ChannelsFragment";
 
@@ -20,9 +21,10 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "onCreateView");
 
         View rootView = inflater.inflate(R.layout.channels_fragment, container, false);
+
         channelsListView = (ChannelsListView) rootView.findViewById(R.id.channels_lv);
         channelsListView.setListAdapter();
 
@@ -32,16 +34,10 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
         return rootView;
     }
 
-    // TODO This fab stuff doesnt work. Same for other fragments.
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-        fab.show();
-    }
-
     @Override
     public void onFocus() {
+        if (getActivity() == null) return;
+        fab = (FloatingActionButton) getActivity().findViewById(R.id.fab);
         if (fab != null) {
             fab.show();
         }
@@ -71,7 +67,7 @@ public class ChannelsFragment extends TabbedFragment implements View.OnClickList
     public void onPositiveClick(String host, String channelId) {
         Log.d(TAG, "onPositiveClick");
         ListenService.getInstance().startListen(host, channelId);
-        PersistentDataManager.addChannel(getContext(), channelId);
+        PersistentDataManager.addChannel(getContext(), new ChannelPreference(host, channelId));
         channelsListView.refreshListAdapter();
     }
 }

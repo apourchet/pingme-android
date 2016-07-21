@@ -25,11 +25,9 @@ public class PingsListView extends ListView implements Pingable {
     }
 
     public void setListAdapter() {
-        Log.d(TAG, "ADAPTING!");
         if (adapter == null) {
             adapter = new ArrayAdapter<>(getContext(), R.layout.pings_fragment_row);
             for (Ping p : PersistentDataManager.getLastPings(getContext())) {
-                Log.d(TAG, "LOOK AT THIS PING: " + p.toString());
                 adapter.add(p.getChannelId() + " -> " + p.getMessage());
             }
         }

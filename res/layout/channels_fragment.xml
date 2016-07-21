@@ -6,6 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="8dp"
+    android:background="@android:color/white"
     tools:context="com.antoinepourchet.pingme.ChannelsFragment">
 
         <com.antoinepourchet.pingme.ChannelsListView

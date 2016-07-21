@@ -21,8 +21,7 @@ public class ListenService extends Service implements Pingable {
 
     private static ListenService instance;
 
-    private HashMap<String,ChannelListener> channels;
-    private HashMap<String,Ping> lastPings;
+    private HashMap<String, ChannelListener> channels;
     private Notifier notifier;
 
     private LocalBroadcastManager broadcaster;
@@ -33,8 +32,7 @@ public class ListenService extends Service implements Pingable {
 
     @Override
     public void onPing(Ping ping) {
-        PersistentDataManager.addLastPing(this, ping);
-        lastPings.put(ping.getChannelId(), ping);
+        ping.save(this);
         notifier.onPing(ping);
         broadcastPing(ping);
     }
@@ -45,29 +43,24 @@ public class ListenService extends Service implements Pingable {
         broadcaster.sendBroadcast(intent);
     }
 
-    public synchronized boolean isListening(String channelid) {
-        return channels.containsKey(channelid) && channels.get(channelid).isListening();
-    }
-
-    public synchronized List<Ping> getLastPings() {
-        return new ArrayList<>(lastPings.values());
+    public synchronized boolean isListening(String host, String channelId) {
+        String key = host + ";" + channelId;
+        return channels.containsKey(key) && channels.get(key).isListening();
     }
 
     public synchronized void startListen(String host, String channelId) {
+        String key = host + ";" + channelId;
         ChannelListener cl = new ChannelListener(this, host, channelId);
+        channels.put(key, cl);
         cl.start();
-        channels.put(channelId, cl);
     }
 
-    public synchronized void stopListen(String channelId) {
-        if (channels.containsKey(channelId)){
-            channels.get(channelId).stop();
-            channels.remove(channelId);
+    public synchronized void stopListen(String host, String channelId) {
+        String key = host + ";" + channelId;
+        if (channels.containsKey(key)){
+            channels.get(key).stop();
+            channels.remove(key);
         }
-    }
-
-    public synchronized void removePing(String channelId) {
-        lastPings.remove(channelId);
     }
 
     @Override
@@ -75,7 +68,6 @@ public class ListenService extends Service implements Pingable {
         super.onCreate();
         instance = this;
         channels = new HashMap<>();
-        lastPings = new HashMap<>();
         notifier = new Notifier(this);
         broadcaster = LocalBroadcastManager.getInstance(this);
     }
@@ -84,11 +76,11 @@ public class ListenService extends Service implements Pingable {
     public void onStart(Intent intent, int startId) {
         Log.d(TAG, "OnStart");
 
-        Set<String> allChannels = PersistentDataManager.getChannels(this);
-        String host = PersistentDataManager.getHost(this);
-
-        for (String c : allChannels) {
-            startListen(host, c);
+        Set<ChannelPreference> allChannels = PersistentDataManager.getChannels(this);
+        for (ChannelPreference c : allChannels) {
+            if (c.doListen()) {
+                startListen(c.getHost(), c.getId());
+            }
         }
     }
 

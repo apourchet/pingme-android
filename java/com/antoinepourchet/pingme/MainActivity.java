@@ -8,12 +8,15 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,11 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
+
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
-        // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
@@ -44,33 +45,33 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
         tabLayout.addOnTabSelectedListener(mSectionsPagerAdapter);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        LogPrefsOnStart();
+    }
 
+    private void LogPrefsOnStart() {
+        Log.d(TAG, "CHECKING STORAGE");
+        Set<ChannelPreference> channels = PersistentDataManager.getChannels(this);
+        for (ChannelPreference c : channels) {
+            Log.d(TAG, c.toString());
+        }
+        List<Ping> pings = PersistentDataManager.getLastPings(this);
+        for (Ping p : pings) {
+            Log.d(TAG, p.toString());
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            mViewPager.setCurrentItem(2);
             return true;
         }
 
@@ -89,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
             tabbedFragments = new ArrayList<>();
-            tabbedFragments.add(new PingsFragment());
             tabbedFragments.add(new ChannelsFragment());
+            tabbedFragments.add(new PingsFragment());
             tabbedFragments.add(new SettingsFragment());
         }
 
@@ -114,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             return tabbedFragments.get(position).getTabTitle();
         }
-
 
         @Override
         public void onTabSelected(TabLayout.Tab tab) {

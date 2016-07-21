@@ -30,7 +30,7 @@ public class PersistentDataManager {
     public static final String PREF_LASTPINGS = "last_pings";
 
 
-    public static Set<String> getChannels(Context context) {
+    public static Set<ChannelPreference> getChannels(Context context) {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         String channelsString = sharedPref.getString(PREF_CHANNELS, DEFAULT_CHANNELS);
         return channelsFromString(channelsString);
@@ -47,9 +47,12 @@ public class PersistentDataManager {
         return sharedPref.getString(PREF_HOST, DEFAULT_HOST);
     }
 
-    public static void addChannel(Context context, String newChannel) {
-        Set<String> allChannels = getChannels(context);
+    public static void addChannel(Context context, ChannelPreference newChannel) {
+        Set<ChannelPreference> allChannels = getChannels(context);
+
+        allChannels.remove(newChannel);
         allChannels.add(newChannel);
+
         String newChannelsString = stringFromChannels(allChannels);
         applyPrefString(context, PREF_CHANNELS, newChannelsString);
     }
@@ -66,9 +69,17 @@ public class PersistentDataManager {
         applyPrefString(context, PREF_LASTPINGS, newPingsString);
     }
 
-    public static void removeChannel(Context context, String channelId) {
-        Set<String> allChannels = getChannels(context);
-        allChannels.remove(channelId);
+    public static void setHost(Context context, String host) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        editor.putString(PREF_HOST, host);
+        editor.apply();
+    }
+
+    public static void removeChannel(Context context, ChannelPreference channelPreference) {
+        Set<ChannelPreference> allChannels = getChannels(context);
+        allChannels.remove(channelPreference);
         String newChannelsString = stringFromChannels(allChannels);
         applyPrefString(context, PREF_CHANNELS, newChannelsString);
     }
@@ -86,13 +97,10 @@ public class PersistentDataManager {
         applyPrefString(context, PREF_LASTPINGS, DEFAULT_LASTPINGS);
     }
 
-    public static void setHost(Context context, String host) {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPref.edit();
-
-        editor.putString(PREF_HOST, host);
-        editor.apply();
+    public static void clearHost(Context context) {
+        applyPrefString(context, PREF_HOST, DEFAULT_HOST);
     }
+
 
     // PRIVATE ------------------------------------------------------------------------------------
     private static void applyPrefString(Context context, String label, String value) {
@@ -102,8 +110,8 @@ public class PersistentDataManager {
         editor.apply();
     }
 
-    private static Set<String> channelsFromString(String channelsString) {
-        Set<String> set = new HashSet<>();
+    private static Set<ChannelPreference> channelsFromString(String channelsString) {
+        Set<ChannelPreference> set = new HashSet<>();
         if (channelsString.length() == 0) {
             return set;
         }
@@ -111,16 +119,16 @@ public class PersistentDataManager {
         String[] arr = channelsString.split(";");
         for (String s : arr) {
             String decoded = new String(Base64.decode(s, Base64.URL_SAFE));
-            set.add(decoded);
+            set.add(ChannelPreference.unmarshal(decoded));
         }
         return set;
     }
 
-    private static String stringFromChannels(Collection<String> channels) {
+    private static String stringFromChannels(Collection<ChannelPreference> channels) {
         StringBuilder builder = new StringBuilder();
-        for (String c : channels) {
-            c = new String(Base64.encode(c.getBytes(), Base64.URL_SAFE));
-            builder.append(c).append(";");
+        for (ChannelPreference c : channels) {
+            String channelString = new String(Base64.encode(ChannelPreference.marshal(c).getBytes(), Base64.URL_SAFE));
+            builder.append(channelString).append(";");
         }
         return builder.toString();
     }

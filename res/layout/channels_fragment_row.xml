@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rowTextView"
-    android:layout_width="fill_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:textSize="16sp" >
-</TextView>
+    android:orientation="horizontal">
+    <TextView
+        android:id="@+id/row_channelname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:padding="10dp"
+        android:textSize="16sp" >
+    </TextView>
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="48dp"
+        android:id="@+id/channel_row_remove_button"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:backgroundTint="@color/colorPrimary"
+        android:src="@android:drawable/ic_menu_delete" />
+
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/channel_row_toggle"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@id/channel_row_remove_button" />
+</RelativeLayout>

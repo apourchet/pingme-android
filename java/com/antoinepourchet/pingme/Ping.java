@@ -1,6 +1,7 @@
 package com.antoinepourchet.pingme;
 
 
+import android.content.Context;
 import android.util.Base64;
 
 import java.util.Locale;
@@ -42,18 +43,26 @@ public class Ping {
         return channelId;
     }
 
-    public boolean equals(Ping p) {
-        return p.getHost().equals(host) && p.getChannelId().equals(channelId)
-                && p.getMessage().equals(message) && p.getTime() == time;
+    public Ping save(Context context) {
+        PersistentDataManager.addLastPing(context, this);
+        return this;
     }
 
-    // TODO
+    @Override
+    public boolean equals(Object o) {
+        return o.hashCode() == this.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return host.hashCode() + channelId.hashCode() + message.hashCode() + (int) time;
+    }
+
     @Override
     public String toString() {
         return String.format(Locale.ENGLISH, "Ping { %s -> %s ; %s (%d) }", host, channelId, message, time);
     }
 
-    // TODO
     public static String marshal(Ping ping) {
         StringBuilder builder = new StringBuilder();
         builder.append(ping.getHost()).append(";")
@@ -63,7 +72,6 @@ public class Ping {
         return builder.toString();
     }
 
-    // TODO
     public static Ping unmarshal(String s) {
         String[] arr = s.split(";");
         if (arr.length != 4) {

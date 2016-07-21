@@ -30,4 +30,15 @@
         android:layout_alignParentEnd="true"
         android:singleLine="true"
         android:inputType="textUri" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="45dp"
+        android:text="Clear Preferences"
+        android:id="@+id/settings_clear_button"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
 </RelativeLayout>

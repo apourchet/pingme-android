@@ -94,6 +94,7 @@ public class ChannelListener implements Runnable {
     }
 
     public void stop() {
+        Log.d(TAG, "Closing: " + this.host + " -> " + this.channelId);
         this.requestedStop = true;
     }
 
