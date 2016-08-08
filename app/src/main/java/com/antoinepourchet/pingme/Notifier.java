@@ -23,6 +23,7 @@ public class Notifier implements Pingable {
     public void displayNotification(String channelId, String parsedLine) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(service)
                 .setSmallIcon(R.drawable.icon36x36)
+                .setVibrate(new long[] { 1000 });
                 .setContentTitle("Ping from '" + channelId + "'")
                 .setContentText(parsedLine);
 
